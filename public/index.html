@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>حيوان إنسان جماد Multiplayer</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 2rem; }
+    .letter { font-size: 2rem; margin: 1rem 0; padding: 0.5rem; border: 2px dashed #000; background: #fff; display: inline-block; }
+    input, button { margin: 0.5rem; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>حيوان إنسان جماد - Multiplayer</h1>
+  <p>Room ID: <input id="roomId" placeholder="room123" /> <button onclick="joinRoom()">دخول</button></p>
+  <div id="game" style="display:none">
+    <div class="letter" id="letter">?</div><br>
+    <button onclick="sendLetter()">توليد حرف</button>
+
+    <div>
+      <h3>إجاباتي</h3>
+      <input placeholder="حيوان" id="animal" />
+      <input placeholder="إنسان" id="human" />
+      <input placeholder="جماد" id="object" />
+      <input placeholder="نبات" id="plant" />
+      <input placeholder="بلاد" id="country" />
+      <button onclick="submitAnswers()">إرسال</button>
+    </div>
+
+    <div id="otherAnswers"></div>
+  </div>
+
+  <script>
+    const socket = io();
+    const letters = ["ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "هـ", "و", "ي"];
+    let currentRoom = '';
+
+    function joinRoom() {
+      currentRoom = document.getElementById('roomId').value;
+      if (!currentRoom) return alert('Enter room ID');
+      socket.emit('joinRoom', currentRoom);
+      document.getElementById('game').style.display = 'block';
+    }
+
+    function sendLetter() {
+      const letter = letters[Math.floor(Math.random() * letters.length)];
+      socket.emit('generateLetter', { roomId: currentRoom, letter });
+    }
+
+    socket.on('receiveLetter', (letter) => {
+      document.getElementById('letter').textContent = letter;
+    });
+
+    function submitAnswers() {
+      const answers = {
+        animal: document.getElementById('animal').value,
+        human: document.getElementById('human').value,
+        object: document.getElementById('object').value,
+        plant: document.getElementById('plant').value,
+        country: document.getElementById('country').value
+      };
+      socket.emit('submitAnswers', { roomId: currentRoom, player: socket.id, answers });
+    }
+
+    socket.on('receiveAnswers', ({ player, answers }) => {
+      const html = `<div><strong>${player}</strong><ul>` +
+        Object.entries(answers).map(([key, val]) => `<li>${key}: ${val}</li>`).join('') +
+        `</ul></div>`;
+      document.getElementById('otherAnswers').innerHTML += html;
+    });
+  </script>
+</body>
+</html>
+*/
